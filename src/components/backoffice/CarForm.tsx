@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -59,9 +59,16 @@ interface CarFormProps {
   editImages?: CarImage[];
 }
 
+interface UploadedImage {
+  file: File;
+  type: string;
+  preview: string;
+  isExisting?: boolean;
+}
+
 const CarForm = ({ onSuccess, editCar, editImages }: CarFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; type: string; preview: string }>>([]);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const { toast } = useToast();
 
   const form = useForm<CarFormData>({
@@ -95,6 +102,22 @@ const CarForm = ({ onSuccess, editCar, editImages }: CarFormProps) => {
     },
   });
 
+  // Load existing images when editing
+  useEffect(() => {
+    if (editImages && editImages.length > 0) {
+      const existingImages: UploadedImage[] = editImages.map((img) => ({
+        file: new File([], ''), // Placeholder file for existing images
+        type: img.image_type,
+        preview: img.image_url,
+        isExisting: true, // Flag to identify existing images
+      }));
+      setUploadedImages(existingImages);
+    } else if (!editCar) {
+      // Reset images when not editing
+      setUploadedImages([]);
+    }
+  }, [editCar, editImages]);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, imageType: string) => {
     const files = event.target.files;
     if (!files) return;
@@ -122,7 +145,11 @@ const CarForm = ({ onSuccess, editCar, editImages }: CarFormProps) => {
 
   const removeImage = (index: number) => {
     setUploadedImages(prev => {
-      URL.revokeObjectURL(prev[index].preview);
+      const image = prev[index];
+      // Only revoke URL if it's a new upload (not an existing image)
+      if (!image.isExisting && image.preview) {
+        URL.revokeObjectURL(image.preview);
+      }
       return prev.filter((_, i) => i !== index);
     });
   };
@@ -191,12 +218,38 @@ const CarForm = ({ onSuccess, editCar, editImages }: CarFormProps) => {
         carData = newCar;
       }
 
+      // Handle images: delete old ones if editing, then upload new ones
+      if (editCar && editImages) {
+        // Delete old images from storage
+        for (const oldImage of editImages) {
+          const urlParts = oldImage.image_url.split('/car-images/');
+          if (urlParts.length > 1) {
+            const storagePath = urlParts[1];
+            await supabase.storage
+              .from('car-images')
+              .remove([storagePath]);
+          }
+        }
+        // Delete old image records
+        await supabase
+          .from('car_images')
+          .delete()
+          .eq('car_id', carData.id);
+      }
+
       // Upload new images and create image records
+      let displayOrder = 1;
       for (let i = 0; i < uploadedImages.length; i++) {
-        const { file, type } = uploadedImages[i];
+        const image = uploadedImages[i];
+        if (image.isExisting) {
+          // Skip existing images that weren't replaced
+          continue;
+        }
+        
+        const { file, type } = image;
         
         // Upload to storage
-        const imageUrl = await uploadImageToStorage(file, carData.id, type, i + 1);
+        const imageUrl = await uploadImageToStorage(file, carData.id, type, displayOrder);
         
         // Insert image record
         const { error: imageError } = await supabase
@@ -205,10 +258,11 @@ const CarForm = ({ onSuccess, editCar, editImages }: CarFormProps) => {
             car_id: carData.id,
             image_url: imageUrl,
             image_type: type,
-            display_order: i + 1,
+            display_order: displayOrder,
           });
 
         if (imageError) throw imageError;
+        displayOrder++;
       }
 
       toast({

@@ -49,6 +49,15 @@ const Fleet = () => {
         supabase.from('car_images').select('*')
       ]);
 
+      if (carsResponse.error) {
+        console.error('Error fetching cars:', carsResponse.error);
+        throw carsResponse.error;
+      }
+      if (imagesResponse.error) {
+        console.error('Error fetching images:', imagesResponse.error);
+        throw imagesResponse.error;
+      }
+
       if (carsResponse.data) {
         setCars(carsResponse.data);
       }
@@ -57,6 +66,9 @@ const Fleet = () => {
       }
     } catch (error) {
       console.error('Error fetching cars:', error);
+      // Set empty arrays on error to show empty state
+      setCars([]);
+      setCarImages([]);
     } finally {
       setLoading(false);
     }

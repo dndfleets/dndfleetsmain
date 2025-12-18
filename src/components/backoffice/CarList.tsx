@@ -114,11 +114,14 @@ const CarList = ({ onEdit }: CarListProps) => {
       // Delete car images from storage
       const carImagesList = carImages.filter(img => img.car_id === carId);
       for (const image of carImagesList) {
-        const fileName = image.image_url.split('/').pop();
-        if (fileName) {
+        // Extract the path from the full URL
+        // URL format: https://...supabase.co/storage/v1/object/public/car-images/carId/image_type_order.ext
+        const urlParts = image.image_url.split('/car-images/');
+        if (urlParts.length > 1) {
+          const storagePath = urlParts[1];
           await supabase.storage
             .from('car-images')
-            .remove([fileName]);
+            .remove([storagePath]);
         }
       }
 

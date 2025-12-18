@@ -43,10 +43,16 @@ const CarDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCarDetails();
+    if (id) {
+      fetchCarDetails();
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const fetchCarDetails = async () => {
+    if (!id) return;
+    
     try {
       const [carResponse, imagesResponse] = await Promise.all([
         supabase.from('cars').select('*').eq('id', id).maybeSingle(),
