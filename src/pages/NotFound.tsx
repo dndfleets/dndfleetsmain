@@ -7,10 +7,10 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    // Only log 404 errors in development
+    if (import.meta.env.DEV) {
+      console.warn("404: Route not found:", location.pathname);
+    }
   }, [location.pathname]);
 
   return (
@@ -38,7 +38,7 @@ const NotFound = () => {
             variant="outline"
             size="lg"
             className="border-2 border-white/30 text-white hover:bg-white/10 transition-luxury px-8 py-4 text-lg"
-            onClick={() => window.open('tel:+12345678900')}
+            onClick={() => window.open('tel:+14436221457')}
           >
             <Phone className="w-5 h-5 mr-2" />
             Call Us

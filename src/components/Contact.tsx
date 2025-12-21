@@ -29,13 +29,13 @@ const Contact = () => {
                 <h3 className="font-display text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4">
                   Call Now to Reserve
                 </h3>
-                <a href="tel:+12345678900" className="block text-xl sm:text-2xl md:text-3xl font-display text-secondary mb-4 sm:mb-6 hover:text-secondary-light transition-colors">
-                  +1 (234) 567-890
+                <a href="tel:+14436221457" className="block text-xl sm:text-2xl md:text-3xl font-display text-secondary mb-4 sm:mb-6 hover:text-secondary-light transition-colors">
+                  +1 (443) 622 1457
                 </a>
                 <Button 
                   size="lg"
                   className="w-full sm:w-auto bg-secondary hover:bg-secondary-dark transition-luxury btn-luxury-hover px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg"
-                  onClick={() => window.open('tel:+12345678900')}
+                  onClick={() => window.open('tel:+14436221457')}
                 >
                   <Phone className="w-5 h-5 mr-2" />
                   Call Now
@@ -104,10 +104,10 @@ const Contact = () => {
             <Button 
               size="lg"
               className="w-full sm:w-auto bg-gradient-secondary hover:shadow-glow transition-luxury btn-luxury-hover px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg md:text-xl"
-              onClick={() => window.open('tel:+12345678900')}
+              onClick={() => window.open('tel:+14436221457')}
             >
               <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
-              <span className="hidden sm:inline">Call +1 (234) 567-890 Now</span>
+              <span className="hidden sm:inline">Call +1 (443) 622 1457 Now</span>
               <span className="sm:hidden">Call Now</span>
             </Button>
           </div>

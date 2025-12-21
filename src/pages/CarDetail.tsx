@@ -43,34 +43,35 @@ const CarDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      fetchCarDetails();
-    } else {
-      setLoading(false);
-    }
+    const fetchCarDetails = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const [carResponse, imagesResponse] = await Promise.all([
+          supabase.from('cars').select('*').eq('id', id).maybeSingle(),
+          supabase.from('car_images').select('*').eq('car_id', id)
+        ]);
+
+        if (carResponse.data) {
+          setCar(carResponse.data);
+        }
+        if (imagesResponse.data) {
+          setCarImages(imagesResponse.data.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error fetching car details:', error);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCarDetails();
   }, [id]);
-
-  const fetchCarDetails = async () => {
-    if (!id) return;
-    
-    try {
-      const [carResponse, imagesResponse] = await Promise.all([
-        supabase.from('cars').select('*').eq('id', id).maybeSingle(),
-        supabase.from('car_images').select('*').eq('car_id', id)
-      ]);
-
-      if (carResponse.data) {
-        setCar(carResponse.data);
-      }
-      if (imagesResponse.data) {
-        setCarImages(imagesResponse.data.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
-      }
-    } catch (error) {
-      console.error('Error fetching car details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getCarImages = (): string[] => {
     const images = carImages.map(img => img.image_url);
@@ -134,7 +135,7 @@ const CarDetail = () => {
           "addressRegion": "FL",
           "addressCountry": "US"
         },
-        "telephone": "+1-234-567-890"
+        "telephone": "+1-443-622-1457"
       }
     },
     "aggregateRating": {
@@ -221,6 +222,8 @@ const CarDetail = () => {
                         src={imageUrl}
                         alt={`${car.brand} ${car.model} - Image ${index + 1}`}
                         className="w-full h-96 md:h-[600px] object-cover"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
                       />
                     </CarouselItem>
                   ))}
@@ -329,7 +332,7 @@ const CarDetail = () => {
                 </p>
                 <div className="flex items-center justify-center space-x-2 text-2xl font-display">
                   <span>📞</span>
-                  <span>+1 (234) 567-890</span>
+                  <span>+1 (443) 622 1457</span>
                 </div>
               </CardContent>
             </Card>

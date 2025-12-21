@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Autoplay from "embla-carousel-autoplay";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Database } from "lucide-react";
 
 interface Car {
   id: string;
@@ -37,38 +39,86 @@ const Fleet = () => {
   const [cars, setCars] = useState<Car[]>([]);
   const [carImages, setCarImages] = useState<CarImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCars();
   }, []);
 
   const fetchCars = async () => {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      setError('Supabase not configured. Please set up your .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Fetch available cars and images in parallel
       const [carsResponse, imagesResponse] = await Promise.all([
         supabase.from('cars').select('*').eq('available', true),
         supabase.from('car_images').select('*')
       ]);
 
       if (carsResponse.error) {
-        console.error('Error fetching cars:', carsResponse.error);
+        // Check if it's a table doesn't exist error
+        if (carsResponse.error.message?.includes('does not exist') || carsResponse.error.code === '42P01') {
+          setError('Database tables not found. Please run the migration files in your Supabase SQL Editor.');
+        } else {
+          setError(`Database error: ${carsResponse.error.message}`);
+        }
         throw carsResponse.error;
       }
-      if (imagesResponse.error) {
-        console.error('Error fetching images:', imagesResponse.error);
-        throw imagesResponse.error;
+      
+      if (imagesResponse.error && !imagesResponse.error.message?.includes('does not exist')) {
+        // Only log non-critical image errors
+        if (import.meta.env.DEV) {
+          console.warn('Error fetching images:', imagesResponse.error);
+        }
       }
 
       if (carsResponse.data) {
-        setCars(carsResponse.data);
+        const availableCars = carsResponse.data;
+        
+        // Check if cars exist but none are available (only in dev mode)
+        if (availableCars.length === 0 && import.meta.env.DEV) {
+          const { count } = await supabase
+            .from('cars')
+            .select('*', { count: 'exact', head: true });
+          
+          if (count && count > 0) {
+            setError(
+              `${count} car(s) found in database but none are marked as available. ` +
+              `Go to the backoffice to enable cars or check their availability status.`
+            );
+          }
+        }
+        
+        setCars(availableCars);
+      } else {
+        setCars([]);
       }
+      
       if (imagesResponse.data) {
         setCarImages(imagesResponse.data);
       }
+      
+      // Clear error if we successfully got data (even if empty)
+      if (carsResponse.data !== null && !carsResponse.error) {
+        setError(null);
+      }
     } catch (error) {
-      console.error('Error fetching cars:', error);
+      // Only log errors in development
+      if (import.meta.env.DEV) {
+        console.error('Error fetching cars:', error);
+      }
       // Set empty arrays on error to show empty state
       setCars([]);
       setCarImages([]);
+      // Only set generic error if we don't already have a specific error message set above
+      if (!error || (error instanceof Error && error.message === '')) {
+        setError('Failed to connect to database. Please check your Supabase configuration.');
+      }
     } finally {
       setLoading(false);
     }
@@ -104,9 +154,42 @@ const Fleet = () => {
             <h2 className="font-display text-4xl md:text-6xl text-primary mb-6">
               Curated Excellence
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our fleet is being updated. Please check back soon for our premium vehicles.
-            </p>
+            
+            {error ? (
+              <div className="max-w-2xl mx-auto mt-6">
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Database Connection Issue</AlertTitle>
+                  <AlertDescription className="mt-2">
+                    {error}
+                    <div className="mt-4 space-y-2 text-sm">
+                      <p><strong>To fix this:</strong></p>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li>Make sure you have a <code className="bg-muted px-1 rounded">.env</code> file with your Supabase credentials</li>
+                        <li>Run the migration files in your Supabase SQL Editor</li>
+                        <li>Add cars to your database through Supabase dashboard</li>
+                        <li>Check the <Link to="/test-connection" className="underline text-primary">connection test page</Link> for details</li>
+                      </ol>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : (
+              <>
+                <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
+                  Our fleet is being updated. Please check back soon for our premium vehicles.
+                </p>
+                <div className="max-w-2xl mx-auto">
+                  <Alert>
+                    <Database className="h-4 w-4" />
+                    <AlertTitle>No cars found</AlertTitle>
+                    <AlertDescription className="mt-2">
+                      The database is empty. Add your first car through the Supabase dashboard to get started.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -150,6 +233,8 @@ const Fleet = () => {
                             src={imageUrl}
                             alt={`${car.brand} ${car.model} - Image ${index + 1}`}
                             className="w-full h-64 object-cover group-hover:scale-105 transition-luxury"
+                            loading={index === 0 ? "eager" : "lazy"}
+                            decoding="async"
                           />
                         </CarouselItem>
                       ))}
@@ -185,9 +270,9 @@ const Fleet = () => {
               for your needs. Call now for instant availability and pricing.
             </p>
             
-            <a href="tel:+12345678900" className="flex items-center justify-center space-x-2 text-xl sm:text-2xl font-display text-secondary hover:text-secondary-dark transition-colors">
+            <a href="tel:+14436221457" className="flex items-center justify-center space-x-2 text-xl sm:text-2xl font-display text-secondary hover:text-secondary-dark transition-colors">
               <span>📞</span>
-              <span>+1 (234) 567-890</span>
+              <span>+1 (443) 622 1457</span>
             </a>
           </div>
         </div>

@@ -27,7 +27,13 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
-  const handleNavClick = (item: any) => {
+  type NavItem = {
+    name: string;
+    href: string;
+    isRoute?: boolean;
+  };
+
+  const handleNavClick = (item: NavItem) => {
     if (item.isRoute) {
       navigate(item.href);
     } else {
@@ -36,12 +42,11 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: "Home", href: "#home" },
     { name: "Fleet", href: "#fleet" },
     { name: "Eligibility", href: "/eligibility", isRoute: true },
     { name: "Contact", href: "#contact" },
-    { name: "Backoffice", href: "/backoffice", isRoute: true },
   ];
 
   return (
@@ -54,6 +59,8 @@ const Header = () => {
               src="/images/df94e162-ecab-41d6-b1cf-a6c61bf636a1.png" 
               alt="DND Fleets Logo" 
               className="h-12 w-auto object-contain"
+              loading="eager"
+              decoding="async"
             />
           </div>
 
@@ -71,13 +78,13 @@ const Header = () => {
           </nav>
 
           {/* Call Button */}
-          <a href="tel:+12345678900">
+          <a href="tel:+14436221457">
             <Button 
               variant="default"
               className="hidden md:flex items-center space-x-2 bg-gradient-secondary hover:shadow-glow transition-luxury btn-luxury-hover px-6"
             >
               <Phone className="w-4 h-4" />
-              <span>+1 (234) 567-890</span>
+              <span>+1 (443) 622 1457</span>
             </Button>
           </a>
 
@@ -105,13 +112,13 @@ const Header = () => {
                   {item.name}
                 </button>
               ))}
-              <a href="tel:+12345678900">
+              <a href="tel:+14436221457">
                 <Button 
                   variant="default"
                   className="flex items-center justify-center space-x-2 bg-gradient-secondary hover:shadow-glow transition-luxury btn-luxury-hover"
                 >
                   <Phone className="w-4 h-4" />
-                  <span>+1 (234) 567-890</span>
+                  <span>+1 (443) 622 1457</span>
                 </Button>
               </a>
             </nav>

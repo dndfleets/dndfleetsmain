@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,12 +6,25 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
-import Backoffice from "./pages/Backoffice";
 import Eligibility from "./pages/Eligibility";
 import CarDetail from "./pages/CarDetail";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy load ConnectionTest (dev tool only)
+let ConnectionTest: React.ComponentType | null = null;
+if (import.meta.env.DEV) {
+  ConnectionTest = lazy(() => import("./pages/ConnectionTest").then(m => ({ default: m.default })));
+}
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <HelmetProvider>
@@ -21,9 +35,18 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/backoffice" element={<Backoffice />} />
             <Route path="/eligibility" element={<Eligibility />} />
             <Route path="/car/:id" element={<CarDetail />} />
+            {import.meta.env.DEV && ConnectionTest && (
+              <Route 
+                path="/test-connection" 
+                element={
+                  <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                    <ConnectionTest />
+                  </Suspense>
+                } 
+              />
+            )}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

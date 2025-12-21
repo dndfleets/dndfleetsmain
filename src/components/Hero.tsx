@@ -10,6 +10,9 @@ const Hero = () => {
           src="/images/4ec8a679-7f1a-42f0-ba74-b84a7abc8784.png"
           alt="Luxury car hero background"
           className="w-full h-full object-cover object-center"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
         />
         
         {/* Enhanced overlay for better text contrast */}
@@ -70,7 +73,7 @@ const Hero = () => {
 
             {/* Premium Call-to-Action with Enhanced Visibility */}
             <div className="mb-12 sm:mb-16 animate-fade-in">
-              <a href="tel:+12345678900" className="group inline-block w-full sm:w-auto">
+              <a href="tel:+14436221457" className="group inline-block w-full sm:w-auto">
                 <div className="relative overflow-hidden">
                   <Button 
                     size="lg"
@@ -79,7 +82,7 @@ const Hero = () => {
                     <div className="flex items-center justify-center space-x-2 sm:space-x-4">
                       <Phone className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform duration-300" />
                       <span className="tracking-wide font-luxury text-base sm:text-lg">RESERVE NOW</span>
-                      <span className="hidden sm:inline text-sm font-luxury opacity-90">+1 (234) 567-890</span>
+                      <span className="hidden sm:inline text-sm font-luxury opacity-90">+1 (443) 622 1457</span>
                     </div>
                     
                     {/* Premium button effects */}
