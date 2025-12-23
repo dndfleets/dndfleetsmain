@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Autoplay from "embla-carousel-autoplay";
 import { Helmet } from "react-helmet-async";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Car {
   id: string;
@@ -218,12 +219,14 @@ const CarDetail = () => {
                 <CarouselContent>
                   {getCarImages().map((imageUrl, index) => (
                     <CarouselItem key={index}>
-                      <img
+                      <OptimizedImage
                         src={imageUrl}
                         alt={`${car.brand} ${car.model} - Image ${index + 1}`}
                         className="w-full h-96 md:h-[600px] object-cover"
-                        loading={index === 0 ? "eager" : "lazy"}
-                        decoding="async"
+                        width={1200}
+                        height={600}
+                        priority={index === 0}
+                        quality={85}
                       />
                     </CarouselItem>
                   ))}

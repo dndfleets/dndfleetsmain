@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import Autoplay from "embla-carousel-autoplay";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Database } from "lucide-react";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Car {
   id: string;
@@ -229,12 +230,14 @@ const Fleet = () => {
                     <CarouselContent>
                       {getCarImages(car.id).map((imageUrl, index) => (
                         <CarouselItem key={index}>
-                          <img
+                          <OptimizedImage
                             src={imageUrl}
                             alt={`${car.brand} ${car.model} - Image ${index + 1}`}
                             className="w-full h-64 object-cover group-hover:scale-105 transition-luxury"
-                            loading={index === 0 ? "eager" : "lazy"}
-                            decoding="async"
+                            width={400}
+                            height={256}
+                            priority={index === 0}
+                            quality={75}
                           />
                         </CarouselItem>
                       ))}
