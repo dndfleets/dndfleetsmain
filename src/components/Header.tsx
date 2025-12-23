@@ -53,16 +53,23 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
+          {/* Logo - Home Button */}
+          <button
+            onClick={() => {
+              navigate('/');
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center hover:opacity-80 transition-opacity"
+            aria-label="Go to home"
+          >
             <img 
               src="/images/df94e162-ecab-41d6-b1cf-a6c61bf636a1.png" 
               alt="DND Fleets Logo" 
-              className="h-12 w-auto object-contain"
+              className="h-12 w-auto object-contain cursor-pointer"
               loading="eager"
               decoding="async"
             />
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
