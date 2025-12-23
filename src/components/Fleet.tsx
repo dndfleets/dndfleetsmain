@@ -236,7 +236,7 @@ const Fleet = () => {
                             className="w-full h-64 object-cover group-hover:scale-105 transition-luxury"
                             width={400}
                             height={256}
-                            priority={index === 0}
+                            priority={true}
                             quality={75}
                           />
                         </CarouselItem>

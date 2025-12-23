@@ -32,6 +32,7 @@ export const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
+  const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   // Optimize Supabase image URL with transformations
@@ -44,15 +45,6 @@ export const OptimizedImage = ({
         const bucketName = pathParts[pathParts.length - 2];
         const fileName = pathParts[pathParts.length - 1];
         
-        // Use Supabase's image transformation API
-        // Format: /storage/v1/object/sign/{bucket}/{file}?transform=...
-        const transformParams = [];
-        if (width) transformParams.push(`width=${width}`);
-        if (height) transformParams.push(`height=${height}`);
-        transformParams.push(`quality=${quality}`);
-        transformParams.push('format=webp');
-        transformParams.push('resize=cover');
-        
         // For now, return original URL but with WebP format if browser supports
         // Supabase Storage doesn't have built-in transformation, so we'll optimize differently
         // Return original URL - optimization should be done at upload time
@@ -64,7 +56,7 @@ export const OptimizedImage = ({
     return url;
   };
 
-  // Intersection Observer for lazy loading
+  // Intersection Observer for lazy loading - observe the container, not the image
   useEffect(() => {
     if (priority || isInView) return;
 
@@ -82,18 +74,19 @@ export const OptimizedImage = ({
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    // Observe the container div instead of the img element
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
 
     return () => observer.disconnect();
   }, [priority, isInView]);
 
-  const optimizedSrc = isInView ? getOptimizedUrl(src) : "";
+  const optimizedSrc = isInView ? getOptimizedUrl(src) : src;
   const showBlur = !isLoaded && blurDataURL;
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
       {/* Blur placeholder */}
       {showBlur && (
         <img
@@ -109,29 +102,27 @@ export const OptimizedImage = ({
         <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
       )}
 
-      {/* Main image */}
-      {isInView && (
-        <img
-          ref={imgRef}
-          src={optimizedSrc || src}
-          alt={alt}
-          width={width}
-          height={height}
-          className={cn(
-            "transition-opacity duration-300",
-            isLoaded ? "opacity-100" : "opacity-0",
-            className
-          )}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
-          fetchPriority={priority ? "high" : "auto"}
-          onLoad={() => setIsLoaded(true)}
-          onError={() => {
-            setHasError(true);
-            setIsLoaded(true);
-          }}
-        />
-      )}
+      {/* Main image - always render, but only load when in view */}
+      <img
+        ref={imgRef}
+        src={isInView ? optimizedSrc : undefined}
+        alt={alt}
+        width={width}
+        height={height}
+        className={cn(
+          "transition-opacity duration-300 w-full h-full",
+          isLoaded ? "opacity-100" : "opacity-0",
+          className
+        )}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          setHasError(true);
+          setIsLoaded(true);
+        }}
+      />
 
       {/* Error fallback */}
       {hasError && (

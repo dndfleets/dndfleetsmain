@@ -225,7 +225,7 @@ const CarDetail = () => {
                         className="w-full h-96 md:h-[600px] object-cover"
                         width={1200}
                         height={600}
-                        priority={index === 0}
+                        priority={true}
                         quality={85}
                       />
                     </CarouselItem>
